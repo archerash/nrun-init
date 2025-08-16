@@ -38,11 +38,13 @@ sudo chmod +x /var/on/agetty-tty1
 ```
 
 5. Reboot your OS and click `e` when targeting label to start your OS:
-```reboot```
+```
+reboot
+```
 
-6. Find line that begins with `linux` and add `init=/usr/bin/nrun` at the end.
+7. Find line that begins with `linux` and add `init=/usr/bin/nrun` at the end.
 
-7. Press `CTRL-X` and wait for system to boot. If it boots and you can login, you can make nrun run every boot by:
+8. Press `CTRL-X` and wait for system to boot. If it boots and you can login, you can make nrun run every boot by:
 ```
 EDITOR="your_favourite_editor"
 $EDITOR /etc/default/grub
@@ -53,7 +55,17 @@ $EDITOR /etc/default/grub
 GRUB_CMDLINE_LINUX_DEFAULT="quiet init=/usr/bin/nrun"
 ```
 
-9. Save this file and reboot your OS. If everything works you can proceed with configuring your OS running NRun:
+9. Rebuild your GRUB configuration:
+- If you are using Debian-based distro:
+```
+sudo update-grub
+```
+- If you arent using Debian-based distro:
+```
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+10. If everything works you can proceed with configuring your OS running NRun:
 
 [nrun-init/configuration](https://zerfithel.github.io/software/nrun-init/configuration) - Learn how to configure NRun, so you can run graphical session, run GUI software or connect to the network.
 [nrun-init/howitworks](https://zerfithel.github.io/software/nrun-init/howitworks) - Learn how NRun works and how to use it.
