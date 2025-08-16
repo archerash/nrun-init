@@ -1,0 +1,3 @@
+#!/bin/sh
+HOST=$(cat /etc/hostname)
+exec hostname $HOST

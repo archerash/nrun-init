@@ -1,0 +1,6 @@
+Logging
+Service run priority
+Tools to monitor and run/stop services without need to reboot
+Sleep option
+Add musl support
+Guides, showcase and better documentation
