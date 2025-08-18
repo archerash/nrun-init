@@ -10,7 +10,7 @@
 #include "include/msg.h"
 
 void re_stop(const int SIGNAL) {
-  // Send SIGTERM (or SIGKILL if SIGKILL wont work) to all processes except PID 1
+  // Open /proc
   DIR *proc = opendir("/proc");
   if (proc == NULL) {
     errmsg("Failed to open /proc: %s\n", strerror(errno));
@@ -28,7 +28,7 @@ void re_stop(const int SIGNAL) {
     if (*endptr != '\0') continue;
     if (pid == 1) continue;
 
-    kill((pid_t)pid, SIGKILL); // Send SIGKILL to all processes except PID 1 (nrun)
+    kill((pid_t)pid, SIGKILL); // Send SIGKILL to all processes except PID 1 (re)
   }
   closedir(proc);
   

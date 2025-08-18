@@ -1,2 +1,0 @@
-Util to refresh services
-Better documentation

@@ -5,22 +5,13 @@
 #include <signal.h>
 #include <errno.h>
 
-int main(int argc, char **argv) {
-  // Validate command line arguments
-  if (argc < 4) {
-    fprintf(stderr, "Usage: %s <attempts> <sleep_time> <command> [args...]\n", argv[0]);
-    return 1;
-  }
-
-  int attempts = atoi(argv[1]); // number of retries
-  int sleep_time = atoi(argv[2]); // time to wait between retries
-
+int resv(int attempts, const int sleep_time, const char *path) {
   while (attempts-- > 0) {
     pid_t pid = fork(); // create a new child process
 
     if (pid == 0) {
       // Child process
-      execvp(argv[3], &argv[3]);
+      execl(path, path, (char *)NULL);
       // If execvp returns, an error occurred
       perror("execvp failed");
       _exit(127);

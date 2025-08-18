@@ -12,74 +12,49 @@ To add a new service to Re simple create shell script in `/var/sv` directory wit
 
 Installation of Re is quite simple. There is a file named `INSTALL.sh`, you can run it if you want to install re automatically, here is manual guide:
 
-1. First, clone this repository and change your dir to it:
+1. Clone this repo:
 ```
 cd $HOME/
 git clone https://github.com/zerfithel/re
 cd re
 ```
 
-2. Then compile Re into a binary file:
+2. Compile:
 ```
 mkdir bin
-gcc src/*.c src/include/* -o bin/re
+make
 ```
 
-3. Compile useful utils (such as poweroff and reboot):
+3. Create re directories:
 ```
-gcc src/utils/poweroff.c -o bin/re-poweroff
-gcc src/utils/reboot.c -o bin/re-reboot
-```
-
-4. Create required directories for Re to work:
-```
-sudo mkdir -p /var/sv
+sudo mkdir -p /var/on
 sudo mkdir -p /etc/re/core-services
 ```
 
-5. Move files into desired directories:
+4. Install files into desired folders:
 ```
-sudo mv bin/re /usr/bin
-sudo mv bin/re-poweroff /usr/bin
-sudo mv bin/re-reboot /usr/bin
+sudo mv bin/re /usr/bin/re
+sudo mv bin/rectl /usr/bin/re
+sudo mv bin/mountall /usr/bin/re
 ```
 
-6. Add basic core-services:
+5. Add services and stage scripts:
+```
+sudo cp stages/{1,2,3} /etc/re
+sudo cp services/agetty-tty1.sh /var/sv/agetty-tty1
+sudo cp services/udevd.sh /var/sv/udevd
+```
+
+6. Add core services:
 ```
 sudo cp core-services/01-udevd.sh /etc/re/core-services
-sudo cp core-services/03-hostname.sh /etc/re/core-services
-sudo chmod +x /etc/re/core-services/*
-```
-
-7. Now you can choose between simple shell script to mount all of your devices in /etc/fstab (without "noauto" flag) or between my simple C implementation of it
-
-- If you want to use shell script:
-```
 sudo cp core-services/02-filesystems.sh /etc/re/core-services
-sudo chmod +x /etc/re/core-services/*
+sudo cp core-services/03-hostname.sh /etc/re/core-services
 ```
 
-- If you want to use my implementation of mountall
-```
-gcc src/mount/*.c src/mount/include/* -o bin/mountall
-sudo mv bin/mountall /etc/re/core-services/02-filesystems.bin
-sudo chmod +x /etc/re/core-services/*
-```
+You can change `mount -a` line in `02-filesystems.sh` with `mountall` - re implementation of mount all.
 
-8. (Optional Step) Lets add useful services to our `/var/sv` directory:
-```
-sudo cp services/udevd.sh /var/sv
-sudo cp services/agetty-tty1.sh /var/sv
-sudo chmod +x /var/sv/*
-```
-
-9. Make sure every service file is executable:
-```
-sudo chmod +x /var/sv/*
-sudo chmod +x /etc/re/core-services/*
-```
-
-10. Boot into OS with `re` as init system once:
+7. Boot into OS with `re` as init system once:
 
 Now, reboot your system and in GRUB when targeting label to start your OS click `e` and go to line that begins with `linux`. At the end of the line add `init=/usr/bin/re` and remove `ro` if its in same line. You can add `quiet` to make kernel not show useless logs.
 
@@ -89,7 +64,7 @@ To make `re` your default init system run:
 ```re-reboot```
 and proceed to the next step
 
-11. Set `re` as your default init system
+8. Set `re` as your default init system
 
 In order to do that, just edit your `/etc/default/grub` configuration file and in line that begins with `GRUB_CMDLINE_LINUX_DEFAULT` add as an argument `init=/usr/bin/re`
 Example line:
@@ -116,9 +91,9 @@ I suggest reading Re wiki. It will take you less than 10 minutes to read and und
 
 [re/configuration](https://zerfithel.github.io/software/re/configuration) - Learn how to configure Re. This includes: running graphical session, running pipewire, enabling your drivers etc.
 
-[re/guide](https://zerfithel.github.io/software/re/guide) - Learn how to add new services, remove services and use Re.
+[re/rectl](https://zerfithel.github.io/software/re/rectl) - Learn how to use rectl (manage services, edit stage scripts and more).
 
-[re/pipewire](https://zerfithel.github.io/software/re/pipewire) - Full guide on how to run pipewire on Re without any issues. This extends normal configuration guide.
+[re/pipewire](https://zerfithel.github.io/software/re/pipewire) - Full guide on how to run pipewire on Re without any issues.
 
 [re/howitworks](https://zerfithel.github.io/software/re/howitworks) - Learn how `re` works. This is mostly for people that are interested how it works under the mask.
 

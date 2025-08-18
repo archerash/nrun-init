@@ -12,13 +12,19 @@
 
 // shutdown
 static void sigterm_handler(int signum) {
-  printf("=> re: Stage 4: Shutting down\n");
+  pid_t pid = fork();
+  if (pid == 0) {
+    execl("/etc/re/3", "/etc/re/3", (char *)NULL);
+  }
   re_stop(POWER_OFF);
 }
 
 // reboot
 static void sigint_handler(int signum) {
-  printf("=> re: Stage 4: Rebooting\n");
+  pid_t pid = fork();
+  if (pid == 0) {
+    execl("/etc/re/3", "/etc/re/3", (char *)NULL);
+  }
   re_stop(REBOOT);
 }
 

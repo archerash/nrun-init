@@ -13,7 +13,7 @@ check_depends() {
   fi
 }
 
-depends=("gcc" "mv" "cp" "mkdir")
+depends=("gcc" "mv" "cp" "mkdir" "make")
 
 for i in "${depends[@]}"; do
   check_depends $i
@@ -23,46 +23,24 @@ if [ $fail == 1 ]; then
   exit 1
 fi
 
-echo "Stage 1: Compiling..."
+make
 
-mkdir bin
-gcc src/*.c src/include/*.h -o bin/re
-gcc src/poweroff/* -o /bin/re-poweroff
-gcc src/reboot/* -o bin/re-reboot
-
-echo "Stage 2: Installing init..."
-
-mkdir -p /var/sv
 mkdir -p /etc/re/core-services
-
-echo "Installing init, poweroff and reboot"
+mkdir -p /var/sv
 
 mv bin/re /usr/bin
-mv bin/re-poweroff /usr/bin
-mv bin/re-reboot /usr/bin
-
-read -p "Would you like to use shell script or C implementation of mountall? Type 1 for shell and 2 for C" dec
-
-if [ $dec == 1]; then
-  cp core-services/02-filesystems.sh /etc/re/core-services
-else
-  gcc src/mountall/*.c src/mountall/include/*.h -o bin/mountall
-  mv bin/mountall /etc/re/core-services
-fi
-
-echo "Stage 3: Installing core services..."
+mv bin/rectl /usr/bin
+mv bin/mountall /etc/re/core-services/02-mountall.bin
 
 cp core-services/01-udevd.sh /etc/re/core-services
 cp core-services/03-hostname.sh /etc/re/core-services
 
-echo "Stage 4: Installing post-mount services..."
+cp etc/re/1 /etc/re
+cp etc/re/2 /etc/re
+cp etc/re/3 /etc/re
 
-cp services/agetty-tty1.sh /var/sv
-cp services/udevd.sh /var/sv
-
-echo "Stage 5: Finalizing..."
+cp services/* /var/sv
 
 chmod +x /var/sv/*
+chmod +x /etc/re/{1,2,3}
 chmod +x /etc/re/core-services/*
-
-echo "Now. When everything is installed. Go to your /etc/default/grub, add init=/usr/bin/re as an argument to GRUB_CMDLINE_LINUX_DEFAULT line and reboot"

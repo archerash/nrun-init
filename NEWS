@@ -1,3 +1,7 @@
+=== News < XX-08-2025 NO. X> ===
+
+1. Added /etc/re/{1,2,3} which start every new stage. These shell scripts actually run executable that runs services from /etc/re/core-services (stage 1) and /var/sv (stage 2). Stage 3 just outputs text at default
+
 === News < 18-08-2025 NO. 2> ===
 
 1. Added service supervisor
