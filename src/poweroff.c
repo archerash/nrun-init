@@ -16,6 +16,8 @@ void re_stop(const int SIGNAL) {
     errmsg("Failed to open /proc: %s\n", strerror(errno));
   }
 
+  printf("-> Opened /proc");
+
   struct dirent *entry;
   while ((entry = readdir(proc)) != NULL) {
     char *endptr;

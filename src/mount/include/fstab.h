@@ -1,7 +1,6 @@
-#ifndef _STRUCT_H
-#define _STRUCT_H
+#ifndef _FSTAB_H
+#define _FSTAB_H
 #include <stddef.h>
-/* Comments indicate what is alternative name in /usr/include/fstab.h */
 struct fstab {
   char *uuid; // fs_spec
   char *mnt; // fs_file
@@ -10,4 +9,5 @@ struct fstab {
   int fs_dump; // fs_dump
   int fs_pass; // fs_pass
 };
+int readfstab(int fd, int line, struct fstab *fs);
 #endif

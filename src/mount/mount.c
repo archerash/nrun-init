@@ -11,7 +11,6 @@
 #include <limits.h>
 
 #include "include/fstab.h"
-#include "include/struct.h"
 #include "include/msg.h"
 #include "include/streq.h"
 
@@ -149,7 +148,7 @@ static const char* resolve_fs_spec(const char* fs_spec) {
 }
 
 // Main function to mount filesystems from fstab
-int stage0(void) {
+int mount_devices(void) {
   int fd = open("/etc/fstab", O_RDONLY); // open fstab file
   if (fd == -1) return 1;
 
@@ -176,6 +175,15 @@ int stage0(void) {
     const void *data_arg = (extra_opts && *extra_opts) ? extra_opts : NULL;
     const char *dev = resolve_fs_spec(entry.uuid); // resolve UUID/LABEL to /dev path
 
+    // Debug info
+    printf("New device found: %s\n"
+           " UUID: %s\n"
+           " Mountpoint: %s\n"
+           " Filesystem: %s\n"
+           " Options: %s\n"
+           " Dump: %d\n"
+           " Pass: %d\n", dev, entry.uuid, entry.mnt, entry.fstype, entry.mntopts, entry.fs_dump, entry.fs_pass);
+
     // Attempts mounting
     if (mount(dev, entry.mnt, entry.fstype, flags, data_arg) == -1) {
       errmsg("Failed to mount %s on %s: %s\n", dev, entry.mnt, strerror(errno)); 
@@ -185,4 +193,13 @@ int stage0(void) {
 
   close(fd); // Close fstab
   return 0;
+}
+
+int main(void) {
+  // Starts mounting, you can change this core-service with simple shell script:
+
+  /* #!/bin/sh
+     mount -a  */
+  printf("-> Mounting devices\n");
+  mount_devices();
 }

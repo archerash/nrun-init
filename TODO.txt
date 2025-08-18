@@ -1,10 +1,1 @@
-# Most important
-Support for SWAP partitions
-Support for encrypted partitions
-Continue chsv tool and other utils
-Add docs to doc/ directory
-Make small wiki about project on zerfithel.github.io
-Supervisor to monitor services and report errors
-
-# Next projects
-A Linux distribution using RE and custom package manager (not a fork!). I will post updates about progress in doc/NEWS file
+Supervisor to monitor services, try to restart important services if it ends with exit code not equal to 0 and report errors

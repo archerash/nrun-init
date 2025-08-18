@@ -12,13 +12,13 @@
 
 // shutdown
 static void sigterm_handler(int signum) {
-  printf("=> re: Stage 3: Shutting down\n");
+  printf("=> re: Stage 4: Shutting down\n");
   re_stop(POWER_OFF);
 }
 
 // reboot
 static void sigint_handler(int signum) {
-  printf("=> re: Stage 3: Rebooting\n");
+  printf("=> re: Stage 4: Rebooting\n");
   re_stop(REBOOT);
 }
 
@@ -28,12 +28,12 @@ static void sigchld_handler(int signum) {
   int status;
 
   while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-    printf("-> Cleaned up process: %d\n", pid);
+    printf("Cleaned up process: %d\n", pid);
   }
 }
 
 // daemon
-void start_daemon(void) {
+void daemon_mode(void) {
   signal(SIGTERM, sigterm_handler); // if SIGTERM then shutdown
   signal(SIGINT, sigint_handler); // if SIGINT then reboot
   signal(SIGCHLD, sigchld_handler); // if SIGCHLD then clean up zombie

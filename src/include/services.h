@@ -1,2 +1,2 @@
 #include <stddef.h>
-int stage1(void);
+int run_services(const char *path);

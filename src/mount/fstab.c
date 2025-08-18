@@ -5,7 +5,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include "include/struct.h"
+
+#include "include/fstab.h"
 
 int readfstab(int fd, int line, struct fstab *fs) {
   // Input validation

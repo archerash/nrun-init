@@ -1,143 +1,183 @@
-# NRun - A lightweight and minimalist init system for Linux
+# RE - Lightweight and minimalist init system for Linux
 
-**NRun is supposed to be ran as PID 1 process. If it wont, it will automatically quit and wont do anything.**
+Re is simple, lightweight and minimalist init system designed mainly for Linux systems. Re should be started as first PID for it to work.
 
-I am going to release NUtils package to manage and monitor services on NRun systems soon. I will post updates [here](https://zerfithel.github.io/news). 
+## How does Re work?
 
-## Warning ⚠️
+Re works by opening directories and running services in these directories. First it opens `/etc/re/core-services` and runs all executable files there (stage 1), then it enters stage 2 in which it runs all executable files in `/var/sv`. When it runs all of the services it enters stage 3 in which it awaits signals. If it receives `SIGCHLD` signal it cleans up finished process (zombie process). If it receives `SIGTERM` it shutdowns OS and for `SIGINT` it reboots.
 
-I do NOT provide any kind of warranty for this software. Use it at your own risk. Keep in mind this is early development so it may break or not even run. If you find any bugs please report these to my Discord: `@zerfithel`.
+To add a new service to Re simple create shell script in `/var/sv` directory with [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) at the top and code you want to run each time your OS boots. More important services that ensure basic operation of the OS should be added to `/etc/re/core-services` directory.
 
-## Installing & Running NRun 📥
+## How to install Re?
 
-This guide assumes you are using `GRUB` as your bootloader and you have `gcc` and `git` installed.
+Installation of Re is quite simple. There is a file named `INSTALL.sh`, you can run it if you want to install re automatically, here is manual guide:
 
-1. First, clone this repo:
+1. First, clone this repository and change your dir to it:
 ```
 cd $HOME/
-git clone https://github.com/zerfithel/nrun-init
-cd nrun-init
+git clone https://github.com/zerfithel/re
+cd re
 ```
 
-2. Then compile NRun:
+2. Then compile Re into a binary file:
 ```
 mkdir bin
-gcc src/*.c src/include/* -o bin/nrun
+gcc src/*.c src/include/* -o bin/re
 ```
 
-3. Move nrun binary to `/usr/bin`:
+3. Compile useful utils (such as poweroff and reboot):
 ```
-sudo mv bin/nrun /usr/bin/nrun
-```
-
-4. Create required directories for NRun to run and add example service:
-```
-sudo mkdir /var/on
-sudo cp ./services-examples/agetty-tty1 /var/on
-sudo chmod +x /var/on/agetty-tty1
+gcc src/utils/poweroff.c -o bin/re-poweroff
+gcc src/utils/reboot.c -o bin/re-reboot
 ```
 
-5. Reboot your OS and click `e` when targeting label to start your OS:
+4. Create required directories for Re to work:
 ```
-reboot
-```
-
-7. Find line that begins with `linux` and add `init=/usr/bin/nrun` at the end.
-
-8. Press `CTRL-X` and wait for system to boot. If it boots and you can login, you can make nrun run every boot by:
-```
-EDITOR="your_favourite_editor"
-$EDITOR /etc/default/grub
+sudo mkdir -p /var/sv
+sudo mkdir -p /etc/re/core-services
 ```
 
-8. Find line that begins with `GRUB_CMDLINE_LINUX_DEFAULT` and add `init=/usr/bin/nrun` at the end. Example line:
+5. Move files into desired directories:
 ```
-GRUB_CMDLINE_LINUX_DEFAULT="quiet init=/usr/bin/nrun"
+sudo mv bin/re /usr/bin
+sudo mv bin/re-poweroff /usr/bin
+sudo mv bin/re-reboot /usr/bin
 ```
 
-9. Rebuild your GRUB configuration:
-- If you are using Debian-based distro:
+6. Add basic core-services:
 ```
-sudo update-grub
+sudo cp core-services/01-udevd.sh /etc/re/core-services
+sudo cp core-services/03-hostname.sh /etc/re/core-services
+sudo chmod +x /etc/re/core-services/*
 ```
-- If you arent using Debian-based distro:
+
+7. Now you can choose between simple shell script to mount all of your devices in /etc/fstab (without "noauto" flag) or between my simple C implementation of it
+
+- If you want to use shell script:
+```
+sudo cp core-services/02-filesystems.sh /etc/re/core-services
+sudo chmod +x /etc/re/core-services/*
+```
+
+- If you want to use my implementation of mountall
+```
+gcc src/mount/*.c src/mount/include/* -o bin/mountall
+sudo mv bin/mountall /etc/re/core-services/02-filesystems.bin
+sudo chmod +x /etc/re/core-services/*
+```
+
+8. (Optional Step) Lets add useful services to our `/var/sv` directory:
+```
+sudo cp services/udevd.sh /var/sv
+sudo cp services/agetty-tty1.sh /var/sv
+sudo chmod +x /var/sv/*
+```
+
+9. Make sure every service file is executable:
+```
+sudo chmod +x /var/sv/*
+sudo chmod +x /etc/re/core-services/*
+```
+
+10. Boot into OS with `re` as init system once:
+
+Now, reboot your system and in GRUB when targeting label to start your OS click `e` and go to line that begins with `linux`. At the end of the line add `init=/usr/bin/re` and remove `ro` if its in same line. You can add `quiet` to make kernel not show useless logs.
+
+Then, just press `CTRL-X` and wait for OS to start. If you can see all logs indicating services in both `/etc/re/core-services` and `/var/sv` are being run. If you added `tty.sh` as a service try to login with your user account and see if your devices from `/etc/fstab` are mounted. For example if you have a separate /boot partition run the following command: `ls /boot`. If you can see all files there, it means your devices are mounted and you can use your OS as usual.
+
+To make `re` your default init system run:
+```re-reboot```
+and proceed to the next step
+
+11. Set `re` as your default init system
+
+In order to do that, just edit your `/etc/default/grub` configuration file and in line that begins with `GRUB_CMDLINE_LINUX_DEFAULT` add as an argument `init=/usr/bin/re`
+Example line:
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet init=/usr/bin/re"
+```
+
+Then, rebuild your GRUB configuration and reboot:
+```
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
+
+When you will see `re` logs and no errors you can use your OS with `re`. To ensure you are running only `re` as init system run the following command:
+```
+ps aux | grep re
+```
+
+If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `re-reboot` and to shutdown run `re-poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
+
+## How to use and configure Re?
+
+I suggest reading Re wiki. It will take you less than 10 minutes to read and understand how Re works and how to use it.
+
+[re/configuration](https://zerfithel.github.io/software/re/configuration) - Learn how to configure Re. This includes: running graphical session, running pipewire, enabling your drivers etc.
+
+[re/guide](https://zerfithel.github.io/software/re/guide) - Learn how to add new services, remove services and use Re.
+
+[re/pipewire](https://zerfithel.github.io/software/re/pipewire) - Full guide on how to run pipewire on Re without any issues. This extends normal configuration guide.
+
+[re/howitworks](https://zerfithel.github.io/software/re/howitworks) - Learn how `re` works. This is mostly for people that are interested how it works under the mask.
+
+[re/news](https://zerfithel.github.io/software/re/news) - News about Re.
+
+## How to uninstall Re?
+
+Uninstalling Re is very simple. You just remove `init=/usr/bin/re` from your `/etc/default/grub` file. When you do that, run the following command:
 ```
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-10. If everything works you can proceed with configuring your OS running NRun:
+But what if your OS does not boot up or you cant edit your filesystem? Then, you have to create a bootable USB with tools like Etcher or Ventoy. [Etcher Guide](https://www.how2shout.com/how-to/balenaetcher-how-to-create-a-bootable-usb-flash-drive-using-etcher.html).
 
-[nrun-init/configuration](https://zerfithel.github.io/software/nrun-init/configuration) - Learn how to configure NRun, so you can run graphical session, run GUI software or connect to the network.
+If your bootable USB is ready you can plug it in and choose it as your #1 boot option. Wait for it to load and open your tty/terminal inside your live system.
 
-[nrun-init/howitworks](https://zerfithel.github.io/software/nrun-init/howitworks) - Learn how NRun works and how to use it.
-
-[nrun-init/nvidia](https://zerfithel.github.io/software/nrun-init/nvidia) - Learn how to use nvidia with nrun.
-
-[nrun-init/services](https://zerfithel.github.io/software/nrun-init/services) - Take a look at useful services that you can copy to `/var/on` dir.
-
-[news](https://zerfithel.github.io/news) - News about nrun-init. I suggest taking a look there from time to time.
-
-## How to use NRun? 📚
-
-Using NRun is very simple. If you want to create a new service just add shell script (with [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) at top of the file), link to executable or executable file you want to run each time. Make sure every file in `/var/on` has execute permissions by running: `chmod +x /var/on/*`. If file wont be executable it wont run.
-
-Example command to create symlink to executable `echo`:
+Then run the following command and indentificate your disk:
 ```
-sudo ln -s /usr/bin/echo /var/on
+lsblk
 ```
 
-If you want to shutdown or reboot you can use utils in `utils/` directory. Compile these:
-```
-mkdir bin
-gcc utils/poweroff.c -o bin/poweroff
-gcc utils/reboot.c -o bin/reboot
-```
-
-These executables work by sending SIGTERM (shutting down) or SIGINT (rebooting) to PID 1. You dont have to use these utils because you can just simply do that with `kill` command:
-
-```
-kill -s SIGTERM 1 # shutting down
-kill -s SIGINT 1 # rebooting
-```
-
-## How to uninstall NRun? ❌
-
-If your OS properly with NRun installation is very easy. Just edit `/etc/default/grub` and remove `init=/usr/bin/nrun` from `GRUB_CMDLINE_LINUX_DEFAULT` line.
-However, if your OS does not boot properly for some reason, create a bootable USB with any Linux distribution and plug your USB to your PC. Enter your BIOS and set your USB as boot option, then save and exit. In your Linux distro mount your partitions.
-
-For example, if your partitions look like this:
+If you can see your disk (look at disk size/partitions etc.) mount it using `mount` command.
+For example, if your disk configuration looks like this:
 ```
 ├─sdb1   8:17   0     1G  0 part /boot/efi
 ├─sdb2   8:18   0    50G  0 part /
 ├─sdb3   8:19   0   330G  0 part /home
 ```
 
-Run following commands:
+Run the following commands:
 ```
-sudo mount /dev/sdb2 /mnt
+sudo mkdir /mnt
+sudo mount /dev/sdb2 /mnt/
 sudo mount /dev/sdb1 /mnt/boot/efi
 sudo mount /dev/sdb3 /mnt/home
 ```
 
-Of course this is just a example. To view your partitions run `lsblk` command.
+Its important that root (/) partition should be mounted first.
 
-Then, use `chroot` (or `xchroot`/`arch-chroot` if running Void/Arch Linux) and edit `/etc/default/grub`:
+Then, use tool like `chroot` to change your root into your mounted filesystem:
 ```
-chroot /mnt
-EDITOR="your_favourite_editor"
-$EDITOR /etc/default/grub
+sudo chroot /mnt
 ```
 
-Find `GRUB_CMDLINE_LINUX_DEFAULT` line and remove `init=/usr/bin/nrun` from there. Then just run:
+There, edit with your text editor `/etc/default/grub` file and remove `init=/usr/bin/re` in `GRUB_CMDLINE_LINUX_DEFAULT` line, then save the file and run the following command:
+```
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
+After that, you can exit your mounted filesystem and reboot:
 ```
 exit
-umount -a
+sudo umount -a
 sudo reboot
 ```
 
-And boot into your OS, you should use your old init, unless you removed it, if you did I recommend reinstalling your OS so you wont have any problems in the future.
+Unplug your USB and wait for your OS to boot. It should start with your default init system. If you did remove your old init system I suggest reinstalling your OS to avoid weird errors.
 
-## Contact & Links 📧
+## Contact & Links
 
 Discord: `@zerfithel`
-Website: [zerfithel.github.io](https://zerfithel.github.io/)
+
+Website: [zerfithel.github.io](https://zerfithel.github.io)
