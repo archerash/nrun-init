@@ -6,7 +6,7 @@
 #include "include/rerun.h"
 #include "include/resig.h"
 
-#define TERM 9
+#define TERM 15
 #define INT 2
 
 int main(int argc, char **argv) {

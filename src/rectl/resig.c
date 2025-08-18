@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define TERM 9
+#define TERM 15
 #define INT 2
 
 int resig(const int SIGNAL) {
