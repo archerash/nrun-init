@@ -1,2 +1,2 @@
 #!/bin/sh
-exec mount -a
+exec resv 10 1 mount -a

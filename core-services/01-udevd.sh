@@ -1,2 +1,2 @@
 #!/bin/sh
-exec udevd --daemon
+exec resv 10 1 /sbin/udevd --daemon

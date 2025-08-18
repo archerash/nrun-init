@@ -1,1 +1,2 @@
-Supervisor to monitor services, try to restart important services if it ends with exit code not equal to 0 and report errors
+Util to refresh services
+Better documentation

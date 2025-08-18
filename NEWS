@@ -1,8 +1,12 @@
-=== News < 18-08-2025 > ===
+=== News < 18-08-2025 NO. 2> ===
+
+1. Added service supervisor
+
+=== News < 18-08-2025 NO. 1> ===
 
 1. Part of the code for mounting drives was separated into a standalone binary.
 
-=== News < 17-08-2025 > ===
+=== News < 17-08-2025 NO. 1> ===
 
 1. Removed fstab.h header and added custom implementation to add native support for MUSL users.
 2. Added more comments to code to make it more readable and understandable
