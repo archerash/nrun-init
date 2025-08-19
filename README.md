@@ -52,7 +52,7 @@ sudo cp core-services/02-filesystems.sh /etc/re/core-services
 sudo cp core-services/03-hostname.sh /etc/re/core-services
 ```
 
-You can change `mount -a` line in `02-filesystems.sh` with `mountall` - re implementation of mount all.
+You can change `mount -a` line in `02-filesystems.sh` with `mountall` - re implementation of mount all. It should be in `bin/mountall` directory (after compiling and creating `bin/` directory)
 
 7. Boot into OS with `re` as init system once:
 
@@ -85,7 +85,23 @@ ps aux | grep re
 
 If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `re-reboot` and to shutdown run `re-poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
 
-## How to use and configure Re?
+## How does Re work?
+
+Re is very similar to `runit`. It works by executing `/etc/re/1`, then `/etc/re/2` at boot and `/etc/re/3` at shutdown. In default Re configuration `/etc/re/1` executes all services in `/etc/re/core-services` directory, then `/etc/re/2` executes `/var/sv/` services. All "stages scripts" (`/etc/re/{1,2,3}`) are just shell scripts but can be replaced with binaries. You can edit these to edit how init behaves without need to recompile. For minimal system configuration you can copy stages from `stages/` directory in this repository. Paste these files into your `/etc/re/`. Also, you can copy services from `core-services/` and copy these to `/etc/re/core-services`. If you want to, you can compile "mountall" from this directory - `src/init/mount` and replace `mount -a` in `/etc/re/core-services/02-filesystems` with `mountall`.
+
+## How to use Rectl?
+
+Rectl is CLI util to shutdown, reboot, start and monitor service and run service directory. Here are some examples of its usage:
+
+`rectl poweroff` - Shutdown now
+
+`rectl reboot` - Reboot now
+
+`rectl svdir /var/sv/` - Start all services in `/var/sv/` directory
+
+`rectl sv 10 1 elogind` - Start `elogind` and monitor it. If it fails sleep for 1 second and attempt to start it again 10 times.
+
+## Wiki
 
 I suggest reading Re wiki. It will take you less than 10 minutes to read and understand how Re works and how to use it.
 

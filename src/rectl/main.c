@@ -10,12 +10,14 @@
 #define INT 2
 
 int main(int argc, char **argv) {
-  if (argc < 3) {
+  if (argc == 1) {
     fprintf(stderr, "Usage: %s [OPTION] <arguments>...\n"
             "Available options:\n"
             "\n"
             "svdir\t Runs all services in given directory\n"
             "sv\t Runs single service and monitors it\n"
+            "poweroff\t Shutdown system\n"
+            "reboot\t Reboot system\n"
             "\n"
             "Full documentation: <https://zerfithel.github.io/software/re/rectl\n"
             "Author: Zerfithel\n", argv[0]);

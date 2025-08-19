@@ -23,6 +23,7 @@ if [ $fail == 1 ]; then
   exit 1
 fi
 
+mkdir bin
 make
 
 mkdir -p /etc/re/core-services
@@ -30,14 +31,13 @@ mkdir -p /var/sv
 
 mv bin/re /usr/bin
 mv bin/rectl /usr/bin
-mv bin/mountall /etc/re/core-services/02-mountall.bin
+mv bin/mountall /usr/bin
 
 cp core-services/01-udevd.sh /etc/re/core-services
+cp core-services/02-filesystems.sh /etc/re/core-services
 cp core-services/03-hostname.sh /etc/re/core-services
 
-cp etc/re/1 /etc/re
-cp etc/re/2 /etc/re
-cp etc/re/3 /etc/re
+cp stages/* /etc/re
 
 cp services/* /var/sv
 

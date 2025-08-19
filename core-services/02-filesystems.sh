@@ -17,7 +17,7 @@ if [ $? -eq 0 ]; then
     
     echo "all filesystems got mounted"
 else
-    echo "fsck returned errors. root might be corrupted"
+    echo "fsck returned errors. filesystems may be corrupted"
     exit 1
 fi
 
