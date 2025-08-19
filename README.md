@@ -61,7 +61,7 @@ Now, reboot your system and in GRUB when targeting label to start your OS click 
 Then, just press `CTRL-X` and wait for OS to start. If you can see all logs indicating services in both `/etc/re/core-services` and `/var/sv` are being run. If you added `tty.sh` as a service try to login with your user account and see if your devices from `/etc/fstab` are mounted. For example if you have a separate /boot partition run the following command: `ls /boot`. If you can see all files there, it means your devices are mounted and you can use your OS as usual.
 
 To make `re` your default init system run:
-```re-reboot```
+```sudo rectl reboot```
 and proceed to the next step
 
 8. Set `re` as your default init system
@@ -83,7 +83,7 @@ When you will see `re` logs and no errors you can use your OS with `re`. To ensu
 ps aux | grep re
 ```
 
-If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `re-reboot` and to shutdown run `re-poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
+If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `rectl reboot` and to shutdown run `rectl poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
 
 ## How does Re work?
 
