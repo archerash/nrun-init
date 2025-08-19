@@ -4,9 +4,7 @@ Re is simple, lightweight and minimalist init system designed mainly for Linux s
 
 ## How does Re work?
 
-Re works by opening directories and running services in these directories. First it opens `/etc/re/core-services` and runs all executable files there (stage 1), then it enters stage 2 in which it runs all executable files in `/var/sv`. When it runs all of the services it enters stage 3 in which it awaits signals. If it receives `SIGCHLD` signal it cleans up finished process (zombie process). If it receives `SIGTERM` it shutdowns OS and for `SIGINT` it reboots.
-
-To add a new service to Re simple create shell script in `/var/sv` directory with [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) at the top and code you want to run each time your OS boots. More important services that ensure basic operation of the OS should be added to `/etc/re/core-services` directory.
+Re is extremely simple init as all it does it running services and reacting to specific signals. At boot, it runs `/etc/re/1` (stage 1) which is shell script that (by default) runs `rectl svdir /etc/re/core-services` to start all services in given directory. When all services are running, it enters stage 2 and it runs `/etc/re/2` which does same thing (by default) but it runs `/var/sv` which are services that should be ran after filesystem is mounted or services that are not required for system to work. When it finishes running services, it enters "daemon mode" where its in infinite loop waiting for signals. It if receives SIGTERM - it kills all processes except itself and shutdowns, when it receives SIGINT it also kills all processes except itself but it reboots instead of shutting down. If it receives SIGCHLD it cleans up finished process. To add a service you can add shell script to `/var/sv/` directory or to `/etc/re/core-services` if its critical for system.
 
 ## How to install Re?
 
@@ -84,10 +82,6 @@ ps aux | grep re
 ```
 
 If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `rectl reboot` and to shutdown run `rectl poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
-
-## How does Re work?
-
-Re is very similar to `runit`. It works by executing `/etc/re/1`, then `/etc/re/2` at boot and `/etc/re/3` at shutdown. In default Re configuration `/etc/re/1` executes all services in `/etc/re/core-services` directory, then `/etc/re/2` executes `/var/sv/` services. All "stages scripts" (`/etc/re/{1,2,3}`) are just shell scripts but can be replaced with binaries. You can edit these to edit how init behaves without need to recompile. For minimal system configuration you can copy stages from `stages/` directory in this repository. Paste these files into your `/etc/re/`. Also, you can copy services from `core-services/` and copy these to `/etc/re/core-services`. If you want to, you can compile "mountall" from this directory - `src/init/mount` and replace `mount -a` in `/etc/re/core-services/02-filesystems` with `mountall`.
 
 ## How to use Rectl?
 
