@@ -1,3 +1,8 @@
-Improve rectl
-Add error logging to init and save stderr output to /var/log/re/err.log
-Add support for Unix/BSD
+thing | priority
+
+Improve rectl | high
+Add error logging to init and save stderr output to /var/log/re/err.log | high
+Add support for Unix/BSD | mid
+Add umount all for rehalt | low
+Add more services to zerfithel/re-services | mid
+Better man pages | extremely low

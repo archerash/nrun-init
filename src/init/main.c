@@ -10,68 +10,76 @@
 #include "include/handler.h"
 
 int main(void) {
+  // Ensure the process is running as PID 1
   if (getpid() > 1) {
-    fprintf(stderr, "re should be ran as PID 1\n");
+    fprintf(stderr, "re should be run as PID 1\n");
     return 1;
   }
-  
+
+  // Start stages /etc/re/1 and /etc/re/2 sequentially
   for (int i = 1; i <= 2; i++) {
     pid_t pid = fork();
-
     if (pid < 0) {
       fprintf(stderr, "Failed to fork process: %s\n", strerror(errno));
       exit(1);
     }
 
-    // Child
-    if (pid == 0) {
+    if (pid == 0) { // Child process
       char *path;
       if (asprintf(&path, "/etc/re/%d", i) == -1) {
         fprintf(stderr, "Failed to create path for stage %d: %s\n", i, strerror(errno));
-        return 1;
-      }
-        
-      if (execl(path, path, (char *)NULL) != 0) {
-        fprintf(stderr, "Failed to run /etc/re/%d: %s\n", i, strerror(errno));
-        free(path);
-        exit(1);
+        _exit(1);
       }
 
+      execl(path, path, (char *)NULL); // Replace child with the stage process
+
+      // If execl fails
+      fprintf(stderr, "Failed to run %s: %s\n", path, strerror(errno));
       free(path);
-    } else { // parent
+      _exit(1); // Child exit
+    } else { // Parent process
       int status;
-      waitpid(pid, &status, 0); // Waiting for child to end
+      if (waitpid(pid, &status, 0) < 0) { // Wait for child to finish
+        fprintf(stderr, "Error waiting for child: %s\n", strerror(errno));
+      }
     }
   }
 
   struct sigaction saction;
 
-  // SIGTERM => Shutdown
+  // Setup SIGTERM handler for shutdown
   memset(&saction, 0, sizeof(saction));
   saction.sa_handler = sigterm_handler;
   sigemptyset(&saction.sa_mask);
   saction.sa_flags = SA_RESTART;
-  sigaction(SIGTERM, &saction, NULL);
+  if (sigaction(SIGTERM, &saction, NULL) < 0) {
+    fprintf(stderr, "sigaction for SIGTERM failed: %s\n", strerror(errno));
+  }
 
-  // SIGINT => Reboot
+  // Setup SIGINT handler for reboot
   memset(&saction, 0, sizeof(saction));
   saction.sa_handler = sigint_handler;
   sigemptyset(&saction.sa_mask);
   saction.sa_flags = SA_RESTART;
-  sigaction(SIGINT, &saction, NULL);
+  if (sigaction(SIGINT, &saction, NULL) < 0) {
+    fprintf(stderr, "sigaction for SIGINT failed: %s\n", strerror(errno));
+  }
 
-  // SIGCHLD => Clean up finished child
+  // Setup SIGCHLD handler to clean up finished child processes
   memset(&saction, 0, sizeof(saction));
   saction.sa_handler = sigchld_handler;
   sigemptyset(&saction.sa_mask);
   saction.sa_flags = SA_RESTART | SA_NOCLDSTOP;
-  sigaction(SIGCHLD, &saction, NULL);
-
-  while (1) {
-    pause(); // waits for signal
+  if (sigaction(SIGCHLD, &saction, NULL) < 0) {
+    fprintf(stderr, "sigaction for SIGCHLD failed: %s\n", strerror(errno));
   }
 
-  // Code of block that should never be reached
+  // Main loop
+  while (1) {
+    pause(); // Wait for any signal
+  }
+
+  // This code should never be reached
   fprintf(stderr, "=> REACHED BLOCK OF CODE THAT SHOULD NEVER BE REACHED... SHUTTING DOWN\n");
   sync();
   reboot(RB_POWER_OFF);

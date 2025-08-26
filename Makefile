@@ -14,6 +14,7 @@ REHALT_SRCS := $(wildcard $(SRC_REHALT)/*.c)
 INIT_HDRS := $(wildcard $(SRC_INIT)/include/*.h)
 MOUNTALL_HDRS := $(wildcard $(SRC_MOUNTALL)/include/*.h)
 RECTL_HDRS := $(wildcard $(SRC_RECTL)/include/*.h)
+REHALT_HDRS := $(wildcard $(SRC_REHALT)/include/*.h)
 
 INIT_BIN := $(BIN_DIR)/re
 MOUNTALL_BIN := $(BIN_DIR)/mountall

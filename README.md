@@ -70,7 +70,7 @@ make
 gcc src/init/*.c src/init/include/*.h -o bin/re
 gcc src/mountall/*.c src/mountall/include/*.h -o bin/mountall
 gcc src/rectl/*.c src/rectl/include/*.h -o bin/rectl
-gcc src/rehalt*.c -o bin/rehalt
+gcc src/rehalt*.c src/include/*.h -o bin/rehalt
 ```
 
 3. Creating RE directories
