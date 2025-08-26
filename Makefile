@@ -1,29 +1,41 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -I.
+# Makefile
 
-SRC_INIT = $(wildcard src/init/*.c)
-SRC_MOUNT = $(wildcard src/init/mount/*.c)
-SRC_RECTL = $(wildcard src/rectl/*.c)
+BIN_DIR := bin
+SRC_INIT := src/init
+SRC_MOUNTALL := src/mountall
+SRC_RECTL := src/rectl
+SRC_REHALT := src/rehalt
 
-HDR_INIT = $(wildcard src/init/include/*.h)
-HDR_MOUNT = $(wildcard src/init/mount/include/*.h)
-HDR_RECTL = $(wildcard src/rectl/include/*.h)
+INIT_SRCS := $(wildcard $(SRC_INIT)/*.c)
+MOUNTALL_SRCS := $(wildcard $(SRC_MOUNTALL)/*.c)
+RECTL_SRCS := $(wildcard $(SRC_RECTL)/*.c)
+REHALT_SRCS := $(wildcard $(SRC_REHALT)/*.c)
 
-BIN = bin
-RE = $(BIN)/re
-MOUNTALL = $(BIN)/mountall
-RECTL = $(BIN)/rectl
+INIT_HDRS := $(wildcard $(SRC_INIT)/include/*.h)
+MOUNTALL_HDRS := $(wildcard $(SRC_MOUNTALL)/include/*.h)
+RECTL_HDRS := $(wildcard $(SRC_RECTL)/include/*.h)
 
-all: $(RE) $(MOUNTALL) $(RECTL)
+INIT_BIN := $(BIN_DIR)/re
+MOUNTALL_BIN := $(BIN_DIR)/mountall
+RECTL_BIN := $(BIN_DIR)/rectl
+REHALT_BIN := $(BIN_DIR)/rehalt
 
-$(RE): $(SRC_INIT) $(HDR_INIT)
-	$(CC) $(SRC_INIT) -o $@
+all: $(BIN_DIR) $(INIT_BIN) $(MOUNTALL_BIN) $(RECTL_BIN) $(REHALT_BIN)
 
-$(MOUNTALL): $(SRC_MOUNT) $(HDR_MOUNT)
-	$(CC) $(SRC_MOUNT) -o $@
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
-$(RECTL): $(SRC_RECTL) $(HDR_RECTL)
-	$(CC) $(SRC_RECTL) -o $@
+$(INIT_BIN): $(INIT_SRCS) $(INIT_HDRS)
+	gcc $(INIT_SRCS) -o $@
+
+$(MOUNTALL_BIN): $(MOUNTALL_SRCS) $(MOUNTALL_HDRS)
+	gcc $(MOUNTALL_SRCS) -o $@
+
+$(RECTL_BIN): $(RECTL_SRCS) $(RECTL_HDRS)
+	gcc $(RECTL_SRCS) -o $@
+
+$(REHALT_BIN): $(REHALT_SRCS)
+	gcc $(REHALT_SRCS) -o $@
 
 clean:
-	rm -f $(RE) $(MOUNTALL) $(RECTL)
+	rm -rf $(BIN_DIR)

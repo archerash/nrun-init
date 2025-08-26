@@ -1,2 +1,0 @@
-#!/bin/sh
-exec echo "=> Re: Stage 3"

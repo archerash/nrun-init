@@ -1,0 +1,14 @@
+.TH re 8 "2025-08-18" "1.0" "System Manager's Manual"
+.SH NAME
+rectl \- Util to manage RE-based system
+.SH DESCRIPTION
+rectl can be used to <poweroff/reboot> or <run service directory/run single service and monitor it>
+.SH USAGE
+rectl poweroff - shutdown
+rectl reboot - reboot 
+rectl sv 10 1 /usr/libexec/elogind - run /usr/libexec/elogind and if it exit code wont be equal to 0 (EXIT_SUCCESS) then retry in 1 second 10 times.
+rectl svdir /etc/re/sv - start all services from /etc/re/sv directory
+.SH SEE ALSO
+re(8), rehalt(8), mountall(8)
+.SH AUTHOR
+Zerfithel <>

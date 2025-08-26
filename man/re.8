@@ -2,16 +2,14 @@
 .SH NAME
 RE \- Lightweight, minimalist init system for Linux
 .SH DESCRIPTION
-Re is a simple init system designed mainly for Linux systems.
+Re is a simple init system for Linux systems.
 .SH STAGE 1
 In first stage, Re runs all of executable files from /etc/re/core-services directory. This directory usually contains services responsible for the basic functioning of the system.
 .SH STAGE 2
 In second stage, Re runs all of executable files from /var/sv directory. This directory usually holds services that are added by user and are not required for OS to boot and work properly.
 .SH STAGE 3
 In stage no. 3, Re enters daemon mode, it waits for signals like SIGCHLD, SIGTERM or SIGINT and reacts to these. For SIGCHLD it cleans up finished zombie process, SIGTERM means shutdown and SIGINT reboot.
-.SH STAGE 4
-This is the last stage of Re because in its stage it kills all of services except itself and shutdowns/reboots depending on signal it got (SIGTERM/SIGINT).
 .SH SEE ALSO
-re-poweroff(8), re-reboot(8), resv(8)
+rectl(8), rehalt(8), mountall(8) 
 .SH AUTHOR
 Zerfithel <>

@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "=> Re: Stage 2"
-exec rectl svdir /var/sv

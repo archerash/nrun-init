@@ -8,12 +8,12 @@ fail=0
 
 check_depends() {
   if ! command -v $1 >/dev/null; then
-    echo "$1 is not installed"
+    echo "$1 is not installed!"
     fail=1
   fi
 }
 
-depends=("gcc" "mv" "cp" "mkdir" "make")
+depends=("gcc" "make")
 
 for i in "${depends[@]}"; do
   check_depends $i
@@ -27,20 +27,21 @@ mkdir bin
 make
 
 mkdir -p /etc/re/core-services
+mkdir -p /etc/re/sv
 mkdir -p /var/sv
-
-mv bin/re /usr/bin
-mv bin/rectl /usr/bin
-mv bin/mountall /usr/bin
-
-cp core-services/01-udevd.sh /etc/re/core-services
-cp core-services/02-filesystems.sh /etc/re/core-services
-cp core-services/03-hostname.sh /etc/re/core-services
-
-cp stages/* /etc/re
-
-cp services/* /var/sv
-
-chmod +x /var/sv/*
+touch /etc/re/{1,2,3}
 chmod +x /etc/re/{1,2,3}
+
+git clone https://github.com/zerfithel/re-services
+cp re-services/sv/basic/* /etc/re/sv
+chmod +x /etc/re/sv/*
+ln -s /etc/re/sv/* /var/sv
+
+cp re-services/core-services/basic/* /etc/re/core-services
 chmod +x /etc/re/core-services/*
+
+cp re-services/stages/basic/{1,2,3} /etc/re
+chmod +x /etc/re/{1,2,3}
+
+echo "success: installed: now follow guide from step 6! btw, thank you so much for trying out RE <3"
+exit 0

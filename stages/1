@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "=> Re: Stage 1"
-exec rectl svdir /etc/re/core-services

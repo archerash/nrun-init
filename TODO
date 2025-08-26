@@ -1,2 +1,3 @@
-add better man pages
-Write documentation for both re and rectl on zerfithel.github.io
+Improve rectl
+Add error logging to init and save stderr output to /var/log/re/err.log
+Add support for Unix/BSD

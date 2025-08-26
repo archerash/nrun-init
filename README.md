@@ -1,168 +1,214 @@
-# RE - Lightweight and minimalist init system for Linux
+# RE - Lightweight and minimalist init system for Linux systems
 
-Re is simple, lightweight and minimalist init system designed mainly for Linux systems. Re should be started as first PID for it to work.
+RE is a simple and lightweight init system designed for Linux systems. It is supposed to be ran as PID 1 (init) for it to work.
 
-## How does Re work?
+## How does RE work?
 
-Re is extremely simple init as all it does it running services and reacting to specific signals. At boot, it runs `/etc/re/1` (stage 1) which is shell script that (by default) runs `rectl svdir /etc/re/core-services` to start all services in given directory. When all services are running, it enters stage 2 and it runs `/etc/re/2` which does same thing (by default) but it runs `/var/sv` which are services that should be ran after filesystem is mounted or services that are not required for system to work. When it finishes running services, it enters "daemon mode" where its in infinite loop waiting for signals. It if receives SIGTERM - it kills all processes except itself and shutdowns, when it receives SIGINT it also kills all processes except itself but it reboots instead of shutting down. If it receives SIGCHLD it cleans up finished process. To add a service you can add shell script to `/var/sv/` directory or to `/etc/re/core-services` if its critical for system.
+When the bootloader loads the kernel into RAM, it may also load the initramfs (a temporary filesystem). The kernel unpacks the initramfs and uses it to mount the root filesystem (your root disk partition). Then it runs init, which becomes the first process (PID 1) in Unix systems like Debian or Arch. That is exactly what RE is, it is that "init" file. RE is very simple and it works by running "stages scripts" that can be found in `/etc/re` directory. First, at boot, RE starts `/etc/re/1` shell script. When this script returns SIGCHLD (it ends) it runs `/etc/re/2` and after it returns SIGCHLD (it ends) RE enters "daemon mode" in which it waits for signals. If it receives `SIGCHLD` (signal that indicates a child process has ended) it cleans up finished process. If it receives `SIGTERM` or `SIGINT` it runs `/etc/re/3` and `shutdowns` if it was SIGTERM and `reboots` if it was SIGINT.
 
-## How to install Re?
+## What are stages scripts?
 
-Installation of Re is quite simple. There is a file named `INSTALL.sh`, you can run it if you want to install re automatically, here is manual guide:
+Stages scripts are just shell scripts that are ran by the init during boot (1, 2) or shutdown (3). The first stage script in default RE configuration executes `rectl` that runs all services from `/etc/re/core-services` directory. Services there are core services that need to be ran for system to work or other essential services. Second stage script runs `rectl` that runs all services in `/var/sv` directory. You should add most services to `/var/sv` directory (ex. lightdm, agetty, dhcpcd). The last script (third one) in default RE configuration runs `rehalt` which sends `SIGKILL` signals to all processes except kernel and init system. When all processes are dead, it unmounts all devices from `/etc/mtab` and it kills itself. You can edit these stages scripts with your text editor to change how your system boots/shutdowns. You should NOT add commands to shutdown/reboot OS in `/etc/re/3`.
 
-1. Clone this repo:
+## How to use RE?
+
+Using RE is very simple. Here is a simple "graph" of directories of RE and its use.
+```
+/etc/re -> RE root directory
+├── 1 -> Stage script 1
+├── 2 -> Stage script 2
+├── 3 -> Stage script 3
+├── core-services -> Directory for core services
+│   ├── filesystem 
+│   ├── hostname
+│   ├── modules
+│   └── udevd
+└── sv -> Directory for normal services
+    ├── agetty-tty1
+    ├── audio
+    ├── udevd
+    ├── lightdm
+    └── dhcpcd
+```
+
+Now you can see that services are located in `/etc/re/sv`, but by default these are not ran by RE. To enable these you can either edit your `/etc/re/2` script to run `rectl` on `/etc/re/sv` directory but this is not recommended as it runs all scripts from `/var/sv`. It is recommended to create symlinks in `/var/sv` directory to all services from `/etc/re/sv` you want enabled (ex. to enable all services from /etc/re/sv run: `ln -s /etc/re/sv/* /var/sv` - this command will create symlinks in `/var/sv` directory to all files in `/etc/re/sv` directory). To disable a service simply run `rm /var/sv/<service>`. RE also comes with other handy tools like `rehalt` which can be used to halt system. Here is a small "graph" with utils and its use:
+```
+rehalt -> Used to halt system
+rectl -> Can be used to <shutdown/reboot> or <run service directory/run single service and monitor it>
+mountall -> Used to mount all devices from /etc/fstab in given mountpoints with given flags
+```
+
+While these utils are not required for system to work it is recommended to use them (especially the `rehalt` and `rectl`). I suggest reading small RE wiki about rectl to understand how it works and how to use it [here](https://zerfithel.github.io/software/re/rectl). You can also read man page in this repo inside `man/` directory.
+
+## How to install RE?
+
+It is recommended to have `POSIX Shell` installed to use RE to not use binary files to do simple things (so your stage scripts can be shell scripts, not binaries). This guide assumes you are using `GRUB` as your bootloader.
+
+Build dependencies:
+`C Compiler (gcc)`
+`git`
+`(recommended) make`
+`(recommended) bash`
+
+To quickly setup RE on your system you can run `INSTALL.sh` file in this repository, if you dont want to, here is manual guide:
+
+1. Cloning this repository (if not cloned already):
 ```
 cd $HOME/
 git clone https://github.com/zerfithel/re
 cd re
 ```
 
-2. Compile:
+2. Compiling
 ```
-mkdir bin
+mkdir bin/
 make
 ```
 
-3. Create re directories:
+- If you do not have make installed run following commands instead:
 ```
-sudo mkdir -p /var/on
+gcc src/init/*.c src/init/include/*.h -o bin/re
+gcc src/mountall/*.c src/mountall/include/*.h -o bin/mountall
+gcc src/rectl/*.c src/rectl/include/*.h -o bin/rectl
+gcc src/rehalt*.c -o bin/rehalt
+```
+
+3. Creating RE directories
+```
+sudo mkdir -p /etc/re
 sudo mkdir -p /etc/re/core-services
+sudo mkdir -p /etc/re/sv
+sudo mkdir /var/sv
 ```
 
-4. Install files into desired folders:
+4. Adding basic services and stage scripts
+- Clone `re-services` repository:
 ```
-sudo mv bin/re /usr/bin/re
-sudo mv bin/rectl /usr/bin/re
-sudo mv bin/mountall /usr/bin/re
-```
+git clone https://github.com/zerfithel/re-services
+sudo cp re-services/sv/basic/* /etc/re/sv
+sudo chmod +x /etc/re/sv/*
+sudo ln -s /etc/re/sv/* /var/sv
 
-5. Add services and stage scripts:
-```
-sudo cp stages/{1,2,3} /etc/re
-sudo cp services/agetty-tty1.sh /var/sv/agetty-tty1
-sudo cp services/udevd.sh /var/sv/udevd
-```
+sudo cp re-services/core-services/basic/* /etc/re/core-services
+sudo chmod +x /etc/re/core-services/*
 
-6. Add core services:
-```
-sudo cp core-services/01-udevd.sh /etc/re/core-services
-sudo cp core-services/02-filesystems.sh /etc/re/core-services
-sudo cp core-services/03-hostname.sh /etc/re/core-services
+sudo cp re-services/stages/basic/{1,2,3} /etc/re
+sudo chmod +x /etc/re/{1,2,3}
 ```
 
-You can change `mount -a` line in `02-filesystems.sh` with `mountall` - re implementation of mount all. It should be in `bin/mountall` directory (after compiling and creating `bin/` directory)
+- You can add more services if you want like: `lightdm`, `network`. These are just basic services for you to test RE.
 
-7. Boot into OS with `re` as init system once:
-
-Now, reboot your system and in GRUB when targeting label to start your OS click `e` and go to line that begins with `linux`. At the end of the line add `init=/usr/bin/re` and remove `ro` if its in same line. You can add `quiet` to make kernel not show useless logs.
-
-Then, just press `CTRL-X` and wait for OS to start. If you can see all logs indicating services in both `/etc/re/core-services` and `/var/sv` are being run. If you added `tty.sh` as a service try to login with your user account and see if your devices from `/etc/fstab` are mounted. For example if you have a separate /boot partition run the following command: `ls /boot`. If you can see all files there, it means your devices are mounted and you can use your OS as usual.
-
-To make `re` your default init system run:
-```sudo rectl reboot```
-and proceed to the next step
-
-8. Set `re` as your default init system
-
-In order to do that, just edit your `/etc/default/grub` configuration file and in line that begins with `GRUB_CMDLINE_LINUX_DEFAULT` add as an argument `init=/usr/bin/re`
-Example line:
+5. Moving binaries in desired directories
 ```
-GRUB_CMDLINE_LINUX_DEFAULT="quiet init=/usr/bin/re"
+sudo chmod +x bin/*
+sudo mv bin/* /usr/bin
 ```
 
-Then, rebuild your GRUB configuration and reboot:
+6. Rebooting and testing
+
+Now, lets reboot and test if RE is working properly. Run following command
 ```
-sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo reboot
 ```
 
-When you will see `re` logs and no errors you can use your OS with `re`. To ensure you are running only `re` as init system run the following command:
+In GRUB click `e` while targeting label to boot your OS. Find line that begins with `linux` and add `init=/usr/bin/re` at the end of it. It is recommended to also have `ro` parameter (to enable read-only mode, it will be changed to read-write after fsck scan if it wont return any errors).
+
+Then press `CTRL-X` and it will start your OS with your new `CMDLINE` parameters. When your OS boots login and check if your filesystems are mounted (ex. if you have separate /home partition check if you have files in `/home` by running `ls /home` and do same for all partitions). If everything is working, you can make RE your default init.
+
+7. Making RE default init
+- Reboot system
 ```
-ps aux | grep re
-```
-
-If PID 1 is `re` you are successfuly running `re` init system on your machine. To reboot use `rectl reboot` and to shutdown run `rectl poweroff`. If you didnt install these utils for some weird reason you can use `kill -s SIGINT 1` to reboot and `kill -s SIGTERM 1` to shutdown.
-
-## How to use Rectl?
-
-Rectl is CLI util to shutdown, reboot, start and monitor service and run service directory. Here are some examples of its usage:
-
-`rectl poweroff` - Shutdown now
-
-`rectl reboot` - Reboot now
-
-`rectl svdir /var/sv/` - Start all services in `/var/sv/` directory
-
-`rectl sv 10 1 elogind` - Start `elogind` and monitor it. If it fails sleep for 1 second and attempt to start it again 10 times.
-
-## Wiki
-
-I suggest reading Re wiki. It will take you less than 10 minutes to read and understand how Re works and how to use it.
-
-[re/configuration](https://zerfithel.github.io/software/re/configuration) - Learn how to configure Re. This includes: running graphical session, running pipewire, enabling your drivers etc.
-
-[re/rectl](https://zerfithel.github.io/software/re/rectl) - Learn how to use rectl (manage services, edit stage scripts and more).
-
-[re/pipewire](https://zerfithel.github.io/software/re/pipewire) - Full guide on how to run pipewire on Re without any issues.
-
-[re/howitworks](https://zerfithel.github.io/software/re/howitworks) - Learn how `re` works. This is mostly for people that are interested how it works under the mask.
-
-[re/news](https://zerfithel.github.io/software/re/news) - News about Re.
-
-## How to uninstall Re?
-
-Uninstalling Re is very simple. You just remove `init=/usr/bin/re` from your `/etc/default/grub` file. When you do that, run the following command:
-```
-sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo rectl reboot
 ```
 
-But what if your OS does not boot up or you cant edit your filesystem? Then, you have to create a bootable USB with tools like Etcher or Ventoy. [Etcher Guide](https://www.how2shout.com/how-to/balenaetcher-how-to-create-a-bootable-usb-flash-drive-using-etcher.html).
+- Enter your OS with your old init, login, and edit `/etc/default/grub`, find `GRUB_CMDLINE_LINUX_DEFAULT` line and add `init=/usr/bin/re` at the end of it.
 
-If your bootable USB is ready you can plug it in and choose it as your #1 boot option. Wait for it to load and open your tty/terminal inside your live system.
+- Rebuild your GRUB configuration
+```
+sudo update-grub || sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
 
-Then run the following command and indentificate your disk:
+- Reboot
+```
+sudo reboot
+```
+
+8. (Optional & Not Recommended) Uninstalling old init
+
+If you wish to uninstall your old init (which is not recommended in case you wanting to come back to your old init) please refer to your distro wiki.
+
+## How to use my old init again and uninstall RE?
+
+- If your system boots with RE:
+
+1. Edit `/etc/default/grub` and remove `init=/usr/bin/re` and anything you added there to install RE.
+2. Update your grub configuration:
+```
+sudo update-grub || sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
+3. Reboot:
+```
+sudo rectl reboot
+```
+
+- If your system fails to boot with RE:
+
+1. Create bootable USB with Ventoy/BalenaEtcher or any other tool to create bootable USBs (with Linux installed there).
+2. Plug in your USB, enter BIOS, select your USB as boot option #1.
+3. Mount your partitions inside live boot ISO by:
+
+- To check your partitions:
 ```
 lsblk
 ```
 
-If you can see your disk (look at disk size/partitions etc.) mount it using `mount` command.
-For example, if your disk configuration looks like this:
+Find your system partitions there and mount root (/) partition first, then the other ones. For example if your partitions look like this:
 ```
-├─sdb1   8:17   0     1G  0 part /boot/efi
-├─sdb2   8:18   0    50G  0 part /
-├─sdb3   8:19   0   330G  0 part /home
+├─sda1   8:1    0     1G  0 part /boot/efi
+├─sda2   8:2    0    50G  0 part /
+├─sda3   8:3    0   330G  0 part /home
 ```
+Then run following commands:
 
-Run the following commands:
 ```
 sudo mkdir /mnt
-sudo mount /dev/sdb2 /mnt/
-sudo mount /dev/sdb1 /mnt/boot/efi
+sudo mount /dev/sda2 /mnt
+sudo mount /dev/sda1 /mnt/boot/efi
 sudo mount /dev/sdb3 /mnt/home
 ```
 
-Its important that root (/) partition should be mounted first.
+It is important to mount root first and then partitions that mountpoints are closer to root (/).
 
-Then, use tool like `chroot` to change your root into your mounted filesystem:
+4. Change root into your mounted filesystem:
 ```
 sudo chroot /mnt
 ```
 
-There, edit with your text editor `/etc/default/grub` file and remove `init=/usr/bin/re` in `GRUB_CMDLINE_LINUX_DEFAULT` line, then save the file and run the following command:
+5. Edit your `/etc/default/grub` by removing `init=/usr/bin/re` and any other parameters you added there to make RE work.
+6. Rebuild your GRUB configuration:
 ```
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-```
-After that, you can exit your mounted filesystem and reboot:
-```
-exit
-sudo umount -a
-sudo reboot
+sudo grub-update || sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-Unplug your USB and wait for your OS to boot. It should start with your default init system. If you did remove your old init system I suggest reinstalling your OS to avoid weird errors.
+7. Reboot, wait, unplug USB and boot into your OS.
+
+If you uninstalled your old init you will have to install it again, please refer to your distro wiki. If you did though I highly recommend reinstalling your OS to avoid weird errors.
+
+8. (Optional) Uninstalling RE:
+```
+sudo rm -rf /etc/re
+sudo rm -rf /var/sv
+sudo rm -f /usr/bin/re /usr/bin/rectl /usr/bin/rehalt /usr/bin/mountall
+```
 
 ## Contact & Links
 
-Discord: `@zerfithel`
-
 Website: [zerfithel.github.io](https://zerfithel.github.io)
+
+See RE wiki: [software/re](https://zerfithel.github.io/software/re)
+
+Learn how to configure RE: [re/configuration](https://zerfithel.github.io/software/re/configuration)
+
+Check out re-services repository: [zerfithel/re-services](https://github.com/zerfithel/re-services)
+
+Discord: `@zerfithel`

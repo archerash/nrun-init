@@ -7,13 +7,11 @@
 #include <sys/reboot.h>
 #include <sys/wait.h>
 
-#include "include/services.h"
-#include "include/daemon.h"
-#include "include/msg.h"
+#include "include/handler.h"
 
 int main(void) {
   if (getpid() > 1) {
-    errmsg("re should be ran as PID 1\n");
+    fprintf(stderr, "re should be ran as PID 1\n");
     return 1;
   }
   
@@ -46,8 +44,32 @@ int main(void) {
     }
   }
 
+  struct sigaction saction;
 
-  daemon_mode();
+  // SIGTERM => Shutdown
+  memset(&saction, 0, sizeof(saction));
+  saction.sa_handler = sigterm_handler;
+  sigemptyset(&saction.sa_mask);
+  saction.sa_flags = SA_RESTART;
+  sigaction(SIGTERM, &saction, NULL);
+
+  // SIGINT => Reboot
+  memset(&saction, 0, sizeof(saction));
+  saction.sa_handler = sigint_handler;
+  sigemptyset(&saction.sa_mask);
+  saction.sa_flags = SA_RESTART;
+  sigaction(SIGINT, &saction, NULL);
+
+  // SIGCHLD => Clean up finished child
+  memset(&saction, 0, sizeof(saction));
+  saction.sa_handler = sigchld_handler;
+  sigemptyset(&saction.sa_mask);
+  saction.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+  sigaction(SIGCHLD, &saction, NULL);
+
+  while (1) {
+    pause(); // waits for signal
+  }
 
   // Code of block that should never be reached
   fprintf(stderr, "=> REACHED BLOCK OF CODE THAT SHOULD NEVER BE REACHED... SHUTTING DOWN\n");
