@@ -45,7 +45,6 @@ int rehalt_pkill(void) {
       kill((pid_t)pid, SIGKILL); // Send SIGKILL to process
     }
   }
-  kill(halt_pid, SIGKILL); // Kill itself
   closedir(proc);
   return 0;
 }
