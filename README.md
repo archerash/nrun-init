@@ -81,22 +81,22 @@ sudo mkdir -p /etc/re/sv
 sudo mkdir /var/sv
 ```
 
-4. Adding basic services and stage scripts
-- Clone `re-services` repository:
+4. (Optional) Adding basic services and stage scripts
+**I USE nvidia AND snd_hda_intel TO LOAD MY GPU AND AUDIO DRIVERS YOU MIGHT NEED TO CHANGE THESE SERVICES TO MATCH YOUR GPU/SOUND CARD DRIVERS** 
+
+- Clone my `dotfiles` repository:
 ```
-git clone https://github.com/zerfithel/re-services
-sudo cp re-services/sv/basic/* /etc/re/sv
+git clone https://github.com/zerfithel/dotfiles
+sudo cp dotfiles/re/sv/* /etc/re/sv
 sudo chmod +x /etc/re/sv/*
 sudo ln -s /etc/re/sv/* /var/sv
 
-sudo cp re-services/core-services/basic/* /etc/re/core-services
+sudo cp dotfiles/re/core-services/* /etc/re/core-services
 sudo chmod +x /etc/re/core-services/*
 
-sudo cp re-services/stages/basic/{1,2,3} /etc/re
+sudo cp dotfiles/re/{1,2,3} /etc/re
 sudo chmod +x /etc/re/{1,2,3}
 ```
-
-- You can add more services if you want like: `lightdm`, `network`. These are just basic services for you to test RE.
 
 5. Moving binaries in desired directories
 ```
@@ -209,6 +209,6 @@ See RE wiki: [software/re](https://zerfithel.github.io/software/re)
 
 Learn how to configure RE: [re/configuration](https://zerfithel.github.io/software/re/configuration)
 
-Check out re-services repository: [zerfithel/re-services](https://github.com/zerfithel/re-services)
+Check out my dotfiles repository: [zerfithel/dotfiles](https://github.com/zerfithel/dotfiles)
 
 Discord: `@zerfithel`

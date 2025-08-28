@@ -32,15 +32,15 @@ mkdir -p /var/sv
 touch /etc/re/{1,2,3}
 chmod +x /etc/re/{1,2,3}
 
-git clone https://github.com/zerfithel/re-services
-cp re-services/sv/basic/* /etc/re/sv
+git clone https://github.com/zerfithel/dotfiles
+cp dotfiles/re/sv/* /etc/re/sv
 chmod +x /etc/re/sv/*
 ln -s /etc/re/sv/* /var/sv
 
-cp re-services/core-services/basic/* /etc/re/core-services
+cp dotfiles/re/core-services/* /etc/re/core-services
 chmod +x /etc/re/core-services/*
 
-cp re-services/stages/basic/{1,2,3} /etc/re
+cp dotfiles/re/{1,2,3} /etc/re
 chmod +x /etc/re/{1,2,3}
 
 echo "success: installed: now follow guide from step 6! btw, thank you so much for trying out RE <3"
