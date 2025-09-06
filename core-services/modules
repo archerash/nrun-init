@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Insert modules from /etc/modules-load.d
+
+while read -r module; do
+    [ -n "$module" ] && modprobe "$module"
+done < <(grep -h '^[^#]' /etc/modules-load.d/*.conf)
+

@@ -7,59 +7,26 @@
 #include <sys/reboot.h>
 #include <signal.h>
 
-// poweroff
+#include "include/sig_atomic_t.h"
+
+volatile sig_atomic_t shutdown_r = 0;
+volatile sig_atomic_t reboot_r = 0;
+
+// Handler SIGTERM (poweroff)
 void sigterm_handler(int signum) {
-  pid_t pid = fork();
-  // error
-  if (pid < 0) {
-    fprintf(stderr, "Failed to fork process to shutdown: %s\n", strerror(errno));
-    _exit(1);
-  }
-
-  if (pid == 0) {
-    // execute /etc/re/3 (child)
-    execl("/etc/re/3", "/etc/re/3", (char *)NULL);
-    _exit(1);
-  } else {
-    // parent
-    int status;
-    waitpid(pid, &status, 0); // wait for child to end
-
-    // shutdown
-    reboot(RB_POWER_OFF);
-  }
+  shutdown_r = 1;
 }
 
-// reboot
+// Handler SIGINT (reboot)
 void sigint_handler(int signum) {
-  pid_t pid = fork();
-  // error
-  if (pid < 0) {
-    fprintf(stderr, "Failed to fork process to reboot: %s\n", strerror(errno));
-    _exit(1);
-  }
-
-  if (pid == 0) {
-    // execute /etc/re/3 (child)
-    execl("/etc/re/3", "/etc/re/3", (char *)NULL);
-    _exit(1);
-  } else {
-    // parent
-    int status;
-    waitpid(pid, &status, 0); // wait for child to end
-    
-    // reboot
-    reboot(RB_AUTOBOOT);
-  }
+  reboot_r = 1;
 }
 
-// clean up zombie processes
+// Handler SIGCHLD (child reaping)
 void sigchld_handler(int signum) {
   pid_t pid;
   int status;
-
   while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-    printf("Cleaned up process: %d\n", pid);
+    // reap child
   }
 }
-

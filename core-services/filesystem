@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# If you have swap partition and want to enable it at boot uncomment line 22 and 23
+
+set -e
+set -u
+
+ROOT_DEV=$(findmnt -n -o SOURCE /)
+
+echo "performing fsck on $ROOT_DEV..."
+fsck -y "$ROOT_DEV"
+
+if [ $? -eq 0 ]; then
+    echo "fsck did not return errors, remounting to rw"
+    mount -o remount,rw /
+    
+    echo "mounting other devices from /etc/fstab"
+    mount -a
+    
+    echo "all filesystems got mounted"
+    
+    # echo "enabling swap"
+    # swapon -a
+else
+    echo "fsck returned errors. root might be corrupted"
+    exit 1
+fi
+

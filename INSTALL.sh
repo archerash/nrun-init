@@ -23,25 +23,34 @@ if [ $fail == 1 ]; then
   exit 1
 fi
 
-mkdir bin
-make
+make # compile
 
-mkdir -p /etc/re/core-services
-mkdir -p /etc/re/sv
-mkdir -p /var/sv
-touch /etc/re/{1,2,3}
+mkdir -p /etc/re/core-services # core services dir
+mkdir -p /etc/re/sv # service dir
+mkdir -p /var/sv # enabled services dir
+
+chmod +x bin/*
+mv bin/* /usr/bin
+
+#stage 1
+echo "#\!/bin/sh\necho '=> Re: Stage 1'\nexec rectl svdir /etc/re/core-services" >/etc/re/1
+#stage 2
+echo "#\!/bin/sh\necho '=> Re: Stage 2'\nexec rectl svdir /var/sv" >/etc/re/2
+
+#stage 3 
+echo "#\!/bin/sh\necho '=> Re: Stage 3'\nrehalt\nexec umount -a" >/etc/re/3 
+
 chmod +x /etc/re/{1,2,3}
 
-git clone https://github.com/zerfithel/dotfiles
-cp dotfiles/re/sv/* /etc/re/sv
-chmod +x /etc/re/sv/*
-ln -s /etc/re/sv/* /var/sv
-
-cp dotfiles/re/core-services/* /etc/re/core-services
+cp ./core-services/* /etc/re/core-services 
 chmod +x /etc/re/core-services/*
 
-cp dotfiles/re/{1,2,3} /etc/re
-chmod +x /etc/re/{1,2,3}
+#ttys
+for i in {1..9}; do 
+  echo "#\!/bin/sh\nexec agetty --noclear 38400 tty$i linux" >/etc/re/sv/agetty-tty$i  
+  chmod +x /etc/re/sv/agetty-tty$i 
+  ln -s /etc/re/sv/agetty-tty$i /var/sv
+done
 
-echo "success: installed: now follow guide from step 6! btw, thank you so much for trying out RE <3"
+echo "Succes: Now edit GRUB config and add init=/usr/bin/re to GRUB_CMDLINE_LINUX_DEFAULT line, rebuild grub config and reboot! You should be greeted with tty login screen"
 exit 0

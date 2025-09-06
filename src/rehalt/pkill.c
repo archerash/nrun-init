@@ -42,7 +42,11 @@ int rehalt_pkill(void) {
       if (pid == 1) continue; // Skip init system PID
       if (pid == halt_pid) continue; // If found process is equal to halt then skip
 
-      kill((pid_t)pid, SIGKILL); // Send SIGKILL to process
+      if (kill((pid_t)pid, SIGKILL) != 0) {
+        if (errno != ESRCH) {
+          fprintf(stderr, "kill: %s\n", strerror(errno));
+        }
+      }
     }
   }
   closedir(proc);
